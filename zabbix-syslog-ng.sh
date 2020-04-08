@@ -5,16 +5,26 @@ fail() {
 	exit 1
 }
 
-if [ "$#" -ne 1 ]; then
-    fail "Illegal number of parameters"
-fi
+usage() {
+	fail "usage: $0 (discover|processed) [ITEM]"
+	exit 1
+}
 
-STATS=$(syslog-ng-ctl stats | grep "$1"| grep processed | head -1)
-NUMBER=${STATS##*;}
+[ "$#" -le 1 ] && usage
 
-re='^[0-9]+$'
-if ! [[ $NUMBER =~ $re ]] ; then
-   fail "Cant get syslog-ng stats for $0"
-fi
+case "$1" in
+discover)
+	syslog-ng-ctl stats | grep ';processed;[0-9]*$' | cut -d';' -f1-3 | sort | uniq | jq -Rs '(. / "\n") - [""] | {data: [{ "{#SYSLOG_NG_QUEUE}": .[] }] }'
+	;;
 
-echo "$NUMBER"
+processed)
+	RES=$( syslog-ng-ctl stats | grep "^$2;"| grep ';processed;[0-9]*$' | cut -d';' -f6 | head -n1 || fail "syslog-ng-ctl stats failed!" )
+	[[ $RES =~ ^[0-9]+ ]] || fail "no such item"
+	echo "$RES"
+	;;
+
+*)
+	usage
+	;;
+esac
+

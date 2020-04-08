@@ -1,2 +1,2 @@
-zabbix ALL=(ALL) NOPASSWD: /usr/local/bin/zabbix-syslog-ng.sh
+zabbix ALL=(ALL) NOPASSWD: /usr/local/bin/zabbix_syslog_ng.sh
 Defaults:zabbix !requiretty

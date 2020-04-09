@@ -20,7 +20,7 @@ syslog_stats() {
 
 case "$1" in
 discover)
-	syslog-ng-ctl stats | grep ';processed;[0-9]*$' | cut -d';' -f1-3 | sed 's/;/_/g' | sort | uniq | jq -Rs '(. / "\n") - [""] | {data: [{ "{#SYSLOG_NG_QUEUE}": .[] }] }'
+	syslog-ng-ctl stats | grep -v '^destination;\(d_auth\|d_cron\|d_daemon\|d_kern\|d_lpr\|d_mail\|d_syslog\|d_user\|d_uucp\|d_mailinfo\|d_mailwarn\|d_mailerr\|d_newscrit\|d_newserr\|d_newsnotice\|d_debug\|d_error\|d_messages\|d_console\|d_console_all\|d_xconsole\|d_ppp\);' | grep ';processed;[0-9]*$' | cut -d';' -f1-3 | sed 's/;/_/g' | sort | uniq | jq -Rs '(. / "\n") - [""] | {data: [{ "{#SYSLOG_NG_QUEUE}": .[] }] }'
 	;; 
 
 processed | written | dropped | queued)

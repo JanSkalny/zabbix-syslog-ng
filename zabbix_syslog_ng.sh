@@ -6,22 +6,43 @@ fail() {
 }
 
 usage() {
-	fail "usage: $0 (discover|processed) [ITEM]"
+	fail "usage: $0 (discover-src|discover-dst|processed|queued|dropped|writen) [ITEM]"
 	exit 1
 }
 
+norm() {
+    cut -d ';' -f 2-3 | sed 's/[#;,]/_/g' | sed 's/_$//'
+}
+
+zbx_discover() {
+	sort | uniq | jq -Rs '(. / "\n") - [""] | {data: [{ "{#'$1'}": .[] }] }'
+}
+
 syslog_stats() {
-	RES=$( syslog-ng-ctl stats | sed 's/;/_/' | sed 's/;/_/'| grep "^$2;" | grep ";$1;[0-9]*$" | cut -d';' -f4 | head -n1 )
+	RES=""
+
+	while IFS= read -r LINE; do
+		if [[ "$(echo "$LINE" | norm)" == "$2" ]]; then
+			RES=$( echo "$LINE" | cut -d ';' -f6 | head -n 1)
+			break
+		fi
+	done < <(syslog-ng-ctl stats | grep ";$1;[0-9]\+$")
+
 	[[ $RES =~ ^[0-9]+ ]] || fail "no such item $2"
 	echo "$RES"
 }
 
+
 [ "$#" -lt 1 ] && usage
 
 case "$1" in
-discover)
-	syslog-ng-ctl stats | grep -v '^destination;\(d_auth\|d_cron\|d_daemon\|d_kern\|d_lpr\|d_mail\|d_syslog\|d_user\|d_uucp\|d_mailinfo\|d_mailwarn\|d_mailerr\|d_newscrit\|d_newserr\|d_newsnotice\|d_debug\|d_error\|d_messages\|d_console\|d_console_all\|d_xconsole\|d_ppp\);' | grep ';processed;[0-9]*$' | cut -d';' -f1-3 | sed 's/;/_/g' | sort | uniq | jq -Rs '(. / "\n") - [""] | {data: [{ "{#SYSLOG_NG_QUEUE}": .[] }] }'
-	;; 
+discover-src)
+	syslog-ng-ctl stats | grep '^source;' | norm | zbx_discover "SYSLOG_NG_SRC"
+	;;
+
+discover-dst)
+	syslog-ng-ctl stats | grep '^dst\.[^;]*;' | norm | zbx_discover "SYSLOG_NG_DST"
+	;;
 
 processed | written | dropped | queued)
 	syslog_stats "$1" "$2" || fail "syslog-ng-ctl stats failed!"
@@ -31,4 +52,3 @@ processed | written | dropped | queued)
 	usage
 	;;
 esac
-

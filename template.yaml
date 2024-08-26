@@ -1,0 +1,105 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: 4c83cd085d9d4b03bca3425070cd5a23
+      name: Templates/Applications
+  templates:
+    - uuid: 59d51c7158e149bc824c60a597456a1d
+      template: 'syslog-ng by Zabbix agent'
+      name: 'syslog-ng by Zabbix agent'
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 7799086c0eab46a1a4cf3ce4c3b495e6
+          name: 'syslog-ng global internal_queue_length'
+          key: 'syslog-ng.processed[internal_queue_length]'
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+        - uuid: e1f4a7dfcbd946cb8fca0cea9a8cb96f
+          name: 'syslog-ng global queued'
+          key: 'syslog-ng.processed[_queued]'
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+        - uuid: 91a46c01af6548d09da9108657662c1b
+          name: 'syslog-ng global received'
+          key: 'syslog-ng.processed[_received]'
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+      discovery_rules:
+        - uuid: 64e89cc814814e9eb46b0154c895692a
+          name: 'syslog-ng dst queues'
+          key: syslog-ng.discover-dst
+          delay: 30m
+          lifetime: 7d
+          item_prototypes:
+            - uuid: b2ca13314e0d496d9ebaae7ab143c4d8
+              name: 'syslog-ng queue {#SYSLOG_NG_DST} dropped'
+              key: 'syslog-ng.dropped[{#SYSLOG_NG_DST}]'
+              units: eps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+              tags:
+                - tag: Application
+                  value: syslog-ng
+            - uuid: c4ee8d08e01b4a1581478dccd0d4880b
+              name: 'syslog-ng queue {#SYSLOG_NG_DST} processed'
+              key: 'syslog-ng.processed[{#SYSLOG_NG_DST}]'
+              units: eps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+              tags:
+                - tag: Application
+                  value: syslog-ng
+            - uuid: 856a5809218648488e3a64967f4a8672
+              name: 'syslog-ng queue {#SYSLOG_NG_DST} queued'
+              key: 'syslog-ng.queued[{#SYSLOG_NG_DST}]'
+              units: eps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+              tags:
+                - tag: Application
+                  value: syslog-ng
+            - uuid: b8f3f82c85e54fa9a9e12d92f0f71d52
+              name: 'syslog-ng queue {#SYSLOG_NG_DST} written'
+              key: 'syslog-ng.written[{#SYSLOG_NG_DST}]'
+              units: eps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+              tags:
+                - tag: Application
+                  value: syslog-ng
+          graph_prototypes:
+            - uuid: 0e1693d2960c4177a88f9ae469ab31ff
+              name: 'syslog-ng queue {#SYSLOG_NG_SRC}'
+              graph_items:
+                - color: 1A7C11
+                  item:
+                    host: 'syslog-ng by Zabbix agent'
+                    key: 'syslog-ng.dropped[{#SYSLOG_NG_DST}]'
+                - sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'syslog-ng by Zabbix agent'
+                    key: 'syslog-ng.processed[{#SYSLOG_NG_DST}]'
+                - sortorder: '2'
+                  color: 2774A4
+                  item:
+                    host: 'syslog-ng by Zabbix agent'
+                    key: 'syslog-ng.queued[{#SYSLOG_NG_DST}]'
+                - sortorder: '3'
+                  color: A54F10
+                  item:
+                    host: 'syslog-ng by Zabbix agent'
+                    key: 'syslog-ng.written[{#SYSLOG_NG_DST}]'
+        - uuid: ad438dca84434f53a9fdc337153cc86f
+          name: 'syslog-ng src queues'
+          key: syslog-ng.discover-src
+          delay: 30m
+          lifetime: 7d
+          item_prototypes:
+            - uuid: a989457a781f4ce2a02bd4e231a1fb9f
+              name: 'syslog-ng queue {#SYSLOG_NG_SRC} processed'
+              key: 'syslog-ng.processed[{#SYSLOG_NG_SRC}]'
+              units: eps
+              preprocessing:
+                - type: CHANGE_PER_SECOND

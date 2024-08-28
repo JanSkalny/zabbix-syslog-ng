@@ -11,7 +11,7 @@ usage() {
 }
 
 norm() {
-    cut -d ';' -f 2-3 | sed 's/[#;,]/_/g' | sed 's/_$//'
+    grep ';a;' | cut -d ';' -f 2-3 | sed 's/[#;,]/_/g' | sed 's/_$//'
 }
 
 zbx_discover() {
@@ -26,7 +26,7 @@ syslog_stats() {
 			RES=$( echo "$LINE" | cut -d ';' -f6 | head -n 1)
 			break
 		fi
-	done < <(syslog-ng-ctl stats | grep ";$1;[0-9]\+$")
+	done < <(syslog-ng-ctl stats | grep ';a;' | grep ";$1;[0-9]\+$")
 
 	[[ $RES =~ ^[0-9]+ ]] || fail "no such item $2"
 	echo "$RES"
